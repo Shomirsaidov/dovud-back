@@ -145,19 +145,23 @@ function createPostMessage(jobsGroup, options) {
   return message;
 }
 
-// 🆕 Now takes token and ID from arguments
 async function postToVkWall(message, accessToken, ownerId) {
   const url = 'https://api.vk.com/method/wall.post';
-  const params = {
-    owner_id: ownerId,
-    message,
-    from_group: 1,
-    access_token: accessToken,
-    v: API_VERSION
-  };
+
+  const data = new URLSearchParams();
+  data.append('owner_id', ownerId);
+  data.append('message', message);
+  data.append('from_group', '1');
+  data.append('access_token', accessToken);
+  data.append('v', API_VERSION);
 
   try {
-    const res = await axios.post(url, null, { params });
+    const res = await axios.post(url, data.toString(), {
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
+    });
+
     if (res.data.response) {
       const link = `https://vk.com/wall${ownerId}_${res.data.response.post_id}`;
       return {
@@ -172,6 +176,7 @@ async function postToVkWall(message, accessToken, ownerId) {
     return { success: false, error: error.message };
   }
 }
+
 
 async function markJobAsPublished(jobId, vkLink) {
   const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
